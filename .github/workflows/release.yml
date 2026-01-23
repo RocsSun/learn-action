@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*.*.*
+
+permissions:
+  contents: write
+
+env:
+  BIN_NAME: actions
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Check Cargo.toml version
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          CARGO=$(cargo metadata --no-deps --format-version=1 \
+            | jq -r '.packages[0].version')
+
+          echo "Tag: $TAG"
+          echo "Cargo: $CARGO"
+
+          test "$TAG" = "$CARGO"
+
+  build:
+    needs: check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dsherret/rust-toolchain-file@v1
+      - run: cargo build --release
+
+      - name: Rename binary
+        run: |
+          cp target/release/actions \
+             actions-${{ needs.check.outputs.version }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: actions-${{ needs.check.outputs.version }}
+          path: actions-${{ needs.check.outputs.version }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          files: dist/**
