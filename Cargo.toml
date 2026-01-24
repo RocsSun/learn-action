@@ -1,6 +1,40 @@
 [package]
-name = "learn-action"
-version = "0.1.1"
+name = "cnblogs_lib"
+# WRN: Version will be updated by CI while create a tag, NERVER change this.
+version = "0.0.0-dev"
 edition = "2024"
+description = "Cnblogs' command line tool"
+license = "MIT"
+repository = "https://github.com/cnblogs/cli"
+keywords = ["cli", "cnblogs", "blog"]
+categories = ["command-line-utilities"]
+default-run = "cnb"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "cnb"
+path = "src/bin/cnb.rs"
 
 [dependencies]
+anstream = "0.6.21"
+anstyle = "1.0.13"
+anyhow = "1.0.100"
+chrono = { version = "0.4.42", features = ["serde"] }
+clap = { version = "4.5.54", features = ["derive", "wrap_help"] }
+const_format = "0.2.35"
+home = "0.5.12"
+html2md = "0.2.15"
+lazy_static = "1.5.0"
+owo-colors = "4.2.3"
+regex = "1.12.2"
+reqwest = { version = "0.13.1", features = ["json", "query", "form"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+termimad = "0.34.1"
+tokio = { version = "1.49.0", features = ["full"] }
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
