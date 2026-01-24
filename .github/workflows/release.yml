@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 env:
-  BIN_NAME: actions
+  BIN_NAME: learn-action
 
 jobs:
   check:
@@ -47,13 +47,13 @@ jobs:
 
       - name: Rename binary
         run: |
-          cp target/release/actions \
-             actions-${{ needs.check.outputs.version }}
+          cp target/release/${BIN_NAME} \
+             ${BIN_NAME}-${{ needs.check.outputs.version }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: actions-${{ needs.check.outputs.version }}
-          path: actions-${{ needs.check.outputs.version }}
+          name: ${BIN_NAME}-${{ needs.check.outputs.version }}
+          path: ${BIN_NAME}-${{ needs.check.outputs.version }}
 
   release:
     needs: build
