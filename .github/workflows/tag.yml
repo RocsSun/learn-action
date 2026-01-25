@@ -1,0 +1,48 @@
+name: Create tag on release PR merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from commit message
+        id: version
+        shell: bash
+        run: |
+          msg="$(git log -1 --pretty=%B)"
+          echo "Commit message:"
+          echo "$msg"
+
+          if [[ "$msg" =~ release:\ v([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            version="v${BASH_REMATCH[1]}"
+            echo "version=$version" >> $GITHUB_OUTPUT
+          else
+            echo "No release version found, skip"
+            exit 0
+          fi
+
+      - name: Check tag exists
+        id: check
+        shell: bash
+        run: |
+          if git rev-parse "${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
