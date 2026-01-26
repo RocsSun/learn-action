@@ -1,12 +1,12 @@
 name: Build / Release
 
 on:
-  workflow_call:
-    inputs:
-      version:
-        description: 'Release version (e.g., 1.2.3)'
-        required: true
-        type: string
+  # workflow_call:
+  #   inputs:
+  #     version:
+  #       description: 'Release version (e.g., 1.2.3)'
+  #       required: true
+  #       type: string
   # workflow_dispatch:
   #   inputs:
   #     version:
