@@ -70,17 +70,17 @@ jobs:
       - name: Generate version
         id: gen-version
         shell: bash
-        run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            VERSION="${{ inputs.version }}"
-          else
-            VERSION="${{ github.ref_name }}"
-          fi
+        # run: |
+        #   if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+        #     VERSION="${{ inputs.version }}"
+        #   else
+        #     VERSION="${{ github.ref_name }}"
+        #   fi
 
-          VERSION="${VERSION#v}"
+        #   VERSION="${VERSION#v}"
 
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        # run: echo 'VERSION=${{ github.ref_name }}' | sed 's/v//' >> $GITHUB_OUTPUT
+        #   echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        run: echo 'VERSION=${{ github.ref_name }}' | sed 's/v//' >> $GITHUB_OUTPUT
 
       - name: Replace version
         uses: ./.github/actions/replace-version
