@@ -1,11 +1,17 @@
 name: Build / Release
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       version:
+        description: 'Release version (e.g., 1.2.3)'
         required: true
         type: string
+  # workflow_dispatch:
+  #   inputs:
+  #     version:
+  #       required: true
+  #       type: string
 
   push:
     tags:
@@ -14,6 +20,7 @@ on:
 permissions:
   actions: write
   contents: write
+  
 
 jobs:
   build-release:
