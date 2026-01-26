@@ -47,13 +47,32 @@ jobs:
         with:
           ref: ${{ github.ref }} # github.ref 变量将自动填充为触发事件的分支或标签名
           fetch-depth: 0
-          persist-credentials: false
+          # persist-credentials: false
+
+      - name: Read version from Cargo.toml
+        id: version
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | sed 's/.*= "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Check if release exists
+        id: check_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Setup Rust toolchain
+        if: steps.check_release.outputs.exists == 'false'
         uses: dsherret/rust-toolchain-file@v1
 
       - name: Setup musl-tools
-        if: matrix.targets.target == 'x86_64-unknown-linux-musl'
+        if: matrix.targets.target == 'x86_64-unknown-linux-musl' && steps.check_release.outputs.exists == 'false'
         shell: bash
         run: sudo apt -y install musl-tools
 
@@ -63,46 +82,45 @@ jobs:
           target: ${{ matrix.targets.target }}
 
       - name: Setup Rust cache
+        if: steps.check_release.outputs.exists == 'false'
         uses: Swatinem/rust-cache@v2
         with:
           prefix-key: ${{ matrix.targets.alias }}
 
-      - name: Read version from Cargo.toml
-        id: version
-        run: |
-          VERSION=$(grep '^version' Cargo.toml | sed 's/.*= "\(.*\)"/\1/')
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Run build
+        if: steps.check_release.outputs.exists == 'false'
         uses: ./.github/actions/build
         with:
           target: ${{ matrix.targets.target }}
           release: true
 
       - name: Generate artifacts name
+        if: steps.check_release.outputs.exists == 'false'
         id: gen-name
         shell: bash
         run: echo 'NAME=cnb-${{ steps.version.outputs.version }}-${{ matrix.targets.alias }}' >> $GITHUB_OUTPUT
 
       - name: Generate binary extension
         id: gen-ext
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && steps.check_release.outputs.exists == 'false'
         shell: bash
         run: echo 'EXT=.exe' >> $GITHUB_OUTPUT
 
       - name: Archive binary
+        if: steps.check_release.outputs.exists == 'false'
         uses: ./.github/actions/make-archive
         with:
           files: ./target/${{ matrix.targets.target }}/release/cnb${{ steps.gen-ext.outputs.EXT }}
           out: ${{ steps.gen-name.outputs.NAME }}.zip
 
       - name: Create GitHub release
+        if: steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.gen-name.outputs.NAME }}.zip
 
       - name: Create and push tag
-        if: steps.version.outputs.version != ''
+        if: steps.version.outputs.version != '' && steps.check_release.outputs.exists == 'false'
         run: |
           git tag ${{ steps.version.outputs.version }}
           git push origin ${{ steps.version.outputs.version }}
