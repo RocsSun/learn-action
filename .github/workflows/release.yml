@@ -67,25 +67,11 @@ jobs:
         with:
           prefix-key: ${{ matrix.targets.alias }}
 
-      - name: Generate version
-        id: gen-version
-        shell: bash
-        # run: |
-        #   if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-        #     VERSION="${{ inputs.version }}"
-        #   else
-        #     VERSION="${{ github.ref_name }}"
-        #   fi
-
-        #   VERSION="${VERSION#v}"
-
-        #   echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        run: echo 'VERSION=${{ github.ref_name }}' | sed 's/v//' >> $GITHUB_OUTPUT
-
-      - name: Replace version
-        uses: ./.github/actions/replace-version
-        with:
-          version: ${{ steps.gen-version.outputs.VERSION }}
+      - name: Read version from Cargo.toml
+        id: version
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | sed 's/.*= "\(.*\)"/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Run build
         uses: ./.github/actions/build
@@ -96,7 +82,7 @@ jobs:
       - name: Generate artifacts name
         id: gen-name
         shell: bash
-        run: echo 'NAME=cnb-${{ steps.gen-version.outputs.VERSION }}-${{ matrix.targets.alias }}' >> $GITHUB_OUTPUT
+        run: echo 'NAME=cnb-${{ steps.version.outputs.version }}-${{ matrix.targets.alias }}' >> $GITHUB_OUTPUT
 
       - name: Generate binary extension
         id: gen-ext
@@ -114,3 +100,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.gen-name.outputs.NAME }}.zip
+
+      - name: Create and push tag
+        if: steps.version.outputs.version != ''
+        run: |
+          git tag ${{ steps.version.outputs.version }}
+          git push origin ${{ steps.version.outputs.version }}
