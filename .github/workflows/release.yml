@@ -103,8 +103,8 @@ jobs:
       - name: Archive binary
         uses: ./.github/actions/make-archive
         with:
-          files: ./target/${{ matrix.targets.target }}/release/cnb${{ steps.gen-ext.outputs.EXT }}
-          out: ${{ steps.gen-name.outputs.NAME }}.zip
+          files: ./target/${{ matrix.targets.target }}/release/cnb${{ matrix.targets.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
+          out: cnb-${{ github.ref_name }}-${{ matrix.targets.target }}.zip
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
