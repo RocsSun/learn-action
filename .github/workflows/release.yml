@@ -89,25 +89,25 @@ jobs:
           target: ${{ matrix.targets.target }}
           release: true
 
-      - name: Generate artifacts name
-        id: gen-name
-        run: |
-          echo "NAME=cnb-${{ needs.prepare.outputs.version }}-${{ matrix.targets.alias }}" >> $GITHUB_OUTPUT
+      # - name: Generate artifacts name
+      #   id: gen-name
+      #   run: |
+      #     echo "NAME=cnb-${{ needs.prepare.outputs.version }}-${{ matrix.targets.alias }}" >> $GITHUB_OUTPUT
 
-      - name: Generate binary extension
-        id: gen-ext
-        if: runner.os == 'Windows'
-        shell: bash
-        run: echo 'EXT=.exe' >> $GITHUB_OUTPUT
+      # - name: Generate binary extension
+      #   id: gen-ext
+      #   if: runner.os == 'Windows'
+      #   shell: bash
+      #   run: echo 'EXT=.exe' >> $GITHUB_OUTPUT
 
       - name: Archive binary
         uses: ./.github/actions/make-archive
         with:
           files: ./target/${{ matrix.targets.target }}/release/cnb${{ matrix.targets.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
-          out: cnb-${{ github.ref_name }}-${{ matrix.targets.target }}.zip
+          out: cnb-${{ needs.prepare.outputs.version }}-${{ matrix.targets.target }}.zip
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ needs.prepare.outputs.version }}
-          files: ${{ steps.gen-name.outputs.NAME }}.zip
+          files: cnb-${{ needs.prepare.outputs.version }}-${{ matrix.targets.target }}.zip
