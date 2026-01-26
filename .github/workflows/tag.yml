@@ -88,11 +88,11 @@ jobs:
       #         }
       #       })
 
-      - name: Call reusable workflow
-        if: steps.version.outputs.is_release == 'true'
-        uses: ./.github/workflows/release.yml@main  # 注意这里的写法
-        with:
-          version: ${{ steps.version.outputs.version }}
+      # - name: Call reusable workflow
+      #   if: steps.version.outputs.is_release == 'true'
+      #   uses: ./.github/workflows/release.yml@main  # 注意这里的写法
+      #   with:
+      #     version: ${{ steps.version.outputs.version }}
           # tag_name: ${{ steps.version.outputs.tag_name }}
           # pr_number: ${{ github.event.pull_request.number }}
           # pr_title: ${{ github.event.pull_request.title }}
